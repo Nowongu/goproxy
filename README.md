@@ -2,13 +2,7 @@
 Web Proxy
 
 ## Issues
-go net/http can't handle the `CONNECT` http method which is why the proxy handles separately in the `handleTunneling` func. This is quite important since most http/1 requests through a proxy
-are done using the `CONNECT` http method.
-
-## TODO
-- Add logging instead of just printing to console.
-- Record total bytes sent and received.
-- Add a config file to set port/log details
+go net/http can't handle the `CONNECT` http method which is why the proxy uses a separate `handleTunneling` func. This is important since most http/1 requests use the `CONNECT` method for tsl connections to hide data from the proxy.
 
 
 ## Reference links
