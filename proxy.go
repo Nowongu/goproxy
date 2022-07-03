@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"time"
 )
 
 type proxy struct {
@@ -19,6 +20,8 @@ func (p *proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("%v: %v\n", r.Method, r.URL)
 	if r.Method == http.MethodConnect {
 		handleTunneling(w, r)
+	} else if r.URL.Path == "/" {
+		handleInternalRouting(w, r)
 	} else {
 		handleHTTP(w, r)
 	}
@@ -26,7 +29,7 @@ func (p *proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func handleTunneling(w http.ResponseWriter, r *http.Request) {
 	//connect to remote server
-	destConn, err := net.Dial("tcp", r.Host)
+	proxytoDest, err := net.DialTimeout("tcp", r.Host, time.Second*10)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		fmt.Println(err)
@@ -42,14 +45,24 @@ func handleTunneling(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//take connection away from http library with hijacker
-	clientConn, _, err := hijacker.Hijack()
+	clientToProxy, _, err := hijacker.Hijack()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		fmt.Println(err)
 	}
+	go transfer(proxytoDest, clientToProxy)
+	go transfer(clientToProxy, proxytoDest)
+}
 
-	go transfer(destConn, clientConn)
-	go transfer(clientConn, destConn)
+func transfer(writer io.WriteCloser, source io.ReadCloser) {
+	defer writer.Close()
+	defer source.Close()
+	_, err := io.Copy(writer, source)
+	if err != nil {
+		//example connection closed
+		//readfrom tcp 192.168.45.187:56740->111.119.27.33:443: read tcp [::1]:8080->[::1]:56739: use of closed network connection
+		//fmt.Println(err)
+	}
 }
 
 // Hop-by-hop headers
@@ -101,11 +114,9 @@ func handleHTTP(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, resp.Body)
 }
 
-func transfer(destination io.WriteCloser, source io.ReadCloser) {
-	defer destination.Close()
-	defer source.Close()
-	_, err := io.Copy(destination, source)
-	if err != nil {
-		fmt.Println(err)
-	}
+func handleInternalRouting(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	body := "hello"
+	data := []byte(body)
+	w.Write(data)
 }

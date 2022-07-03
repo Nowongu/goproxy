@@ -3,14 +3,18 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 )
 
 func main() {
-	fmt.Println("Proxy started listening on port 8080...")
+	proxyConfig.Load()
+
+	host := proxyConfig.Hostname + ":" + strconv.Itoa(proxyConfig.Port)
+	fmt.Printf("Proxy started listening on port %v...", host)
 
 	handler := &proxy{}
 
-	if err := http.ListenAndServe(":8080", handler); err != nil {
-		fmt.Println("ListenAndServe:", err)
+	if err := http.ListenAndServe(host, handler); err != nil {
+		fmt.Println("Terminated:", err)
 	}
 }
