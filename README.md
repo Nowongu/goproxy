@@ -2,7 +2,7 @@
 Web Proxy
 
 ## Issues
-go net/http [can't handle](https://github.com/golang/go/issues/17227) the `CONNECT` http method which is why the proxy uses a separate `handleTunneling` func. This is important since most http/1.1 requests use the `CONNECT` method for tsl connections to hide data from the proxy.
+go net/http [can't handle](https://github.com/golang/go/issues/17227) the `CONNECT` http method which is why the proxy uses a separate `handleTunneling` func. This is important since most http/1.1 requests use the `CONNECT` method for tsl connections to hide data from the proxy. http/2 doesn't suffer from the same problem since it doesn't use the CONNECT verb, however go doesn't have good http2 support at the moment, but development is in progress.
 
 
 ## Reference links
