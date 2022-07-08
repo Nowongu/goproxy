@@ -10,7 +10,7 @@ go net/http [can't handle](https://github.com/golang/go/issues/17227) the `CONNE
 - https://github.com/sipt/shuttle
 - https://www.sohamkamani.com/golang/channels/
 
-## Create certificate
+## Create certificate for HTTP/2
 ```
 openssl genrsa -out https-server.key 2048
 openssl ecparam -genkey -name secp384r1 -out https-server.key
